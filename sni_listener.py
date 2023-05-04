@@ -53,7 +53,7 @@ def extract_hostname(packet_data):
 
 def run_server():
     """Runs the SNI listener server"""
-    parser = argparse.ArgumentParser(description='SNI Listener')
+    parser = argparse.ArgumentParser(description='HTTP/SNI Hostname Listener')
     parser.add_argument('--port', type=int, default=443, help='Port to listen on')
     parser.add_argument('--bind-addr', type=str, default='0.0.0.0', help='Address to bind to')
     parser.add_argument('--recv-size', type=int, default=4096, help='Amount of data to read from the socket. This should not need to be changed')
@@ -91,8 +91,8 @@ def run_server():
 
     # print info about the server and output format
     if not quiet:
-        print(f'Hostname Discovery listening on https://{bind_addr}:{port}')
-        print("# cols: timestamp, client_ip:client_port, hostname")
+        print(f'Hostname Discovery listening on {bind_addr}:{port}')
+        print("# cols: timestamp, client_ip:client_port, proto://hostname")
 
     # Accept connections
     while True:
