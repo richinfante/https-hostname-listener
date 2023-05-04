@@ -4,43 +4,50 @@ from datetime import datetime
 import ipaddress
 
 def extract_hostname(packet_data):
-    """Extracts the hostname from the SNI portion of a TLS hello packet"""
+    """Extracts the hostname from the SNI portion of a TLS hello packet, or HTTP Host header"""
+    if packet_data[0] == 0x16:  # TLS Client Hello
+        session_id_length = packet_data[43]
+        # print('Session ID Len:', session_id_length)
+        # session_id = packet_data[44:44+session_id_length].hex()
+        # print('Session ID:', session_id)
 
-    session_id_length = packet_data[43]
-    # print('Session ID Len:', session_id_length)
-    # session_id = packet_data[44:44+session_id_length].hex()
-    # print('Session ID:', session_id)
+        cipher_suites_offset = 44+session_id_length
+        cipher_suites_length = int.from_bytes(packet_data[cipher_suites_offset:cipher_suites_offset+2], byteorder='big')
+        # print('Cipher Suites Len:', cipher_suites_length)
+        # cipher_suites = packet_data[cipher_suites_offset+2:cipher_suites_offset+2+cipher_suites_length].hex()
+        # print('Cipher Suites:', cipher_suites)
 
-    cipher_suites_offset = 44+session_id_length
-    cipher_suites_length = int.from_bytes(packet_data[cipher_suites_offset:cipher_suites_offset+2], byteorder='big')
-    # print('Cipher Suites Len:', cipher_suites_length)
-    # cipher_suites = packet_data[cipher_suites_offset+2:cipher_suites_offset+2+cipher_suites_length].hex()
-    # print('Cipher Suites:', cipher_suites)
+        compression_methods_offset = cipher_suites_offset+2+cipher_suites_length
+        compression_methods_length = packet_data[compression_methods_offset]
+        # print('Compression Methods Len:', compression_methods_length)
+        # compression_methods = packet_data[compression_methods_offset+1:compression_methods_offset+1+compression_methods_length].hex()
+        # print('Compression Methods:', compression_methods)
 
-    compression_methods_offset = cipher_suites_offset+2+cipher_suites_length
-    compression_methods_length = packet_data[compression_methods_offset]
-    # print('Compression Methods Len:', compression_methods_length)
-    # compression_methods = packet_data[compression_methods_offset+1:compression_methods_offset+1+compression_methods_length].hex()
-    # print('Compression Methods:', compression_methods)
+        extensions_offset = compression_methods_offset+1+compression_methods_length
+        extensions_length = int.from_bytes(packet_data[extensions_offset:extensions_offset+2], byteorder='big')
+        # print('Extensions Len:', extensions_length)
+        extensions_data = packet_data[extensions_offset+2:extensions_offset+2+extensions_length]
 
-    extensions_offset = compression_methods_offset+1+compression_methods_length
-    extensions_length = int.from_bytes(packet_data[extensions_offset:extensions_offset+2], byteorder='big')
-    # print('Extensions Len:', extensions_length)
-    extensions_data = packet_data[extensions_offset+2:extensions_offset+2+extensions_length]
+        offset = 0
+        while offset < extensions_length:
+            extension_type = int.from_bytes(extensions_data[offset:offset+2], byteorder='big')
+            extension_length = int.from_bytes(extensions_data[offset+2:offset+4], byteorder='big')
+            extension_data = extensions_data[offset+4:offset+4+extension_length]
 
-    offset = 0
-    while offset < extensions_length:
-        extension_type = int.from_bytes(extensions_data[offset:offset+2], byteorder='big')
-        extension_length = int.from_bytes(extensions_data[offset+2:offset+4], byteorder='big')
-        extension_data = extensions_data[offset+4:offset+4+extension_length]
+            # SNI extension is type 0
+            # https://tools.ietf.org/html/rfc6066#section-3
+            if extension_type == 0:
+                sni_field = extension_data[5:]
+                return 'https://%s' % sni_field.decode()
 
-        # SNI extension is type 0
-        # https://tools.ietf.org/html/rfc6066#section-3
-        if extension_type == 0:
-            sni_field = extension_data[5:]
-            return sni_field.decode()
+            offset += 4+extension_length
 
-        offset += 4+extension_length
+    # HTTP Host header
+    # If no luck, try to parse as a normal HTTP request
+    # Split on \r\n to get lines and look for Host header
+    for line in packet_data.split(b'\r\n'):
+        if line.startswith(b'Host: '):
+            return 'http://%s' % line[6:].decode()
 
     return None
 

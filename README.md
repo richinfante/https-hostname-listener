@@ -6,6 +6,8 @@ This doesn't work with eSNI, but it will reveal the intented hostname for any cl
 
 Encrypted SNI (ESNI) protects this information leakage by encypting the hostname. For more info, see: https://www.cloudflare.com/learning/ssl/what-is-encrypted-sni/
 
+If we don't find a valid TLS hello, this program tries to parse the packet as a normal HTTP packet and extract the `Host` header.
+
 ## Starting The Listener
 ```
 sudo python3 sni_listener.py --port 443
@@ -19,7 +21,7 @@ This works since `localtest.me` resolves to 127.0.0.1. (this is a domain someone
 ```
 Hostname Discovery listening on https://0.0.0.0:443
 # cols: timestamp, client_ip:client_port, hostname
-2023-05-03T21:52:46.563174 127.0.0.1:51867 localtest.me
-2023-05-03T21:52:46.563564 127.0.0.1:51868 localtest.me
-2023-05-03T21:52:47.589556 127.0.0.1:51869 localtest.me
+2023-05-03T22:03:57.310837 127.0.0.1:52371 https://localtest.me
+2023-05-03T22:03:57.311421 127.0.0.1:52372 https://localtest.me
+2023-05-03T22:03:57.990252 127.0.0.1:52373 https://localtest.me
 ```
