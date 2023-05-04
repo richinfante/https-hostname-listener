@@ -12,12 +12,14 @@ sudo python3 sni_listener.py --port 443
 ```
 
 ## Example Output
-If you load "https://localhost:443" in the browser, you would see output like this:
+If you load "https://localtest.me/" in the browser, you would see output like below.
+
+This works since `localtest.me` resolves to 127.0.0.1. (this is a domain someone set up that resolves this way). You could also try "https://localhost" which is typically in your local HOSTS file.
 
 ```
 Hostname Discovery listening on https://0.0.0.0:443
 # cols: timestamp, client_ip:client_port, hostname
-2023-05-03T21:49:19.917972 127.0.0.1:51747 localhost
-2023-05-03T21:49:19.918568 127.0.0.1:51749 localhost
-2023-05-03T21:49:20.947262 127.0.0.1:51751 localhost
+2023-05-03T21:52:46.563174 127.0.0.1:51867 localtest.me
+2023-05-03T21:52:46.563564 127.0.0.1:51868 localtest.me
+2023-05-03T21:52:47.589556 127.0.0.1:51869 localtest.me
 ```
