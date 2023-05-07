@@ -1,4 +1,4 @@
-# SNI-LISTENER
+# HTTPS-HOST-LISTENER
 
 This program listens on a port of your choice, and dumps information from the TLS-SNI extension header and HTTP host header for all requests recieved.
 
